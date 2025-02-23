@@ -66,7 +66,7 @@ export default [
 
   {
     path: '/',
-    redirect: '/welcome',
+    redirect: '/Facturer',
   },
   {
     path: '*',

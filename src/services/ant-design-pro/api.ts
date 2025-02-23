@@ -91,7 +91,7 @@ export async function outLogin() {
 
 export async function login(body: API.LoginParams, options?: { [key: string]: any }): Promise<API.LoginResult> {
   try {
-    const response = await fetch('http://localhost:8000/login', {
+    const response = await fetch(`${config.BaseUrl}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,6 +102,7 @@ export async function login(body: API.LoginParams, options?: { [key: string]: an
         type: 'account', // Aquí se incluye el campo "type"
       }),
     });
+    console.log(response)
 
     const data = await response.json();
 
