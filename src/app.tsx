@@ -26,9 +26,17 @@ export async function getInitialState(): Promise<{
       });
       return msg.data;
     } catch (error) {
+
+      const {location} = history;
       // Solo redirigir si NO está en una ruta pública
       if (!publicPaths.includes(history.location.pathname)) {
         history.push(loginPath);
+      }
+      if(location.pathname !== loginPath){
+        history.push({
+          pathname: loginPath,
+          search: `?redirect=${encodeURIComponent(location.pathname)}`
+        })
       }
     }
     return undefined;
