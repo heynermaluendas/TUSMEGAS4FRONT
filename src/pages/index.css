@@ -6,7 +6,7 @@
     padding: 150px;
   }
   .ant-pro-layout .ant-pro-layout-content{
-    padding-inline: 40px;
+    padding: 40px;
   }
   @media (max-width: 1083px) { /* Dispositivos móviles */
     .fondo {
