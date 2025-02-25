@@ -30,11 +30,17 @@ export default [
     layout: false,
     component: './DowloadFacturer',
   },
+  {
+    path: '/DowloadAllPdf',
+    name: 'Facturas',
+    icon: 'smile',
+    component: './DowloadAllPdf',
+  },
   
 
   {
     path: '/Facturer',
-    name: 'Facturer',
+    name: 'administrar',
     icon: 'smile',
     component: './Facturer',
  

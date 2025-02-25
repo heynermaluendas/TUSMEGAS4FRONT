@@ -1,60 +1,58 @@
-import React, { useState } from "react";
-import { Input, Button, message,Flex } from "antd";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { saveAs } from "file-saver";
 import JSZip from "jszip";
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
+import { pdf, Document, Page, Text, View, StyleSheet,Image } from "@react-pdf/renderer";
+import { Button, message } from "antd";
 import config from '../config';
-import "./index.css";
 
-const Admin: React.FC = () => {
-  const [numeroCuenta, setNumeroCuenta] = useState("");
-  const [data, setData] = useState<any>(null);  
+const DownloadAllPDFs: React.FC = () => {
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(`${config.BaseUrl}/contratantes/`);
+        setUsers(response.data);
+        console.log(response.data)
+      } catch (error) {
+        message.error("Error al cargar los usuarios.");
+      }
+    };
 
-
-
-  const fetchData = async () => {
-    if (!numeroCuenta) {
-      message.warning("Por favor ingrese un número de cuenta");
+    fetchUsers();
+  }, []);
+  
+  const handleDownloadAll = async () => {
+    if (users.length === 0) {
+      message.warning("No hay usuarios disponibles para generar PDFs.");
       return;
     }
+
     setLoading(true);
-    try {
-      const response = await axios.get(`${config.BaseUrl}/contratante/${numeroCuenta}`);
-      setData(response.data);
-      console.log(response.data);
-    } catch (error) {
-      message.error("Error al obtener los datos, verifique el número de cuenta");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const zip = new JSZip();
 
-
+    for (const data of users) {
+        
   const calcularMesesVencidos = (mesAtrasado: string) => {
     const meses = [
       "enero", "febrero", "marzo", "abril", "mayo", "junio",
       "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ];
   
-    
     const mesNormalizado = mesAtrasado.toLowerCase(); 
-    const mesActual = new Date().toLocaleString('es-ES', { month: 'long' }).toLowerCase(); 
+    const mesActual = new Date().toLocaleString('es-ES', { month: 'long' }).toLowerCase();  
   
-    
     if (!mesAtrasado || typeof mesAtrasado !== 'string') {
       return { error: "Mes inválido", cantidad: 0 };
     }
   
-    
     const indiceMesAtrasado = meses.indexOf(mesNormalizado);
     if (indiceMesAtrasado === -1) {
       return { error: "Mes no válido", cantidad: 0 };
     }
   
-    
     const mesesAntes = [
       meses[(meses.indexOf(mesActual) + 11) % 12], 
       meses[(meses.indexOf(mesActual) + 10) % 12], 
@@ -67,10 +65,8 @@ const Admin: React.FC = () => {
       meses[(meses.indexOf(mesActual) + 2) % 12], 
     ];
   
-    
     if (mesesAntes.includes(mesNormalizado)) {
       let mesesVencidos = [];
-      
       if (mesAtrasado.toLowerCase() === "enero") {
         mesesVencidos = ["enero", "febrero"];
       } else if (mesAtrasado.toLowerCase() === "diciembre") {
@@ -93,7 +89,6 @@ const Admin: React.FC = () => {
       };
     }
   
-    
     if (mesesPosteriores.includes(mesNormalizado)) {
       return {
         cantidad: 1,
@@ -142,7 +137,7 @@ const Admin: React.FC = () => {
   let totalFactura = 0;
 
   if (data) {
-    console.log(data.mes_actual)
+    console.log(data.contratante)
     const { cantidad, meses, mensajeMes } = calcularMesesVencidos(data.mes_actual);
     console.log(calcularMesesVencidos("marzo"))
     mesesVencidos = cantidad;
@@ -182,37 +177,22 @@ const Admin: React.FC = () => {
   function obtenerFechaVencimiento(meses) {
     
     const mesesDelAno = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    
-    
     const primerMes = meses[0];
-    
-    
     const indiceMes = mesesDelAno.indexOf(primerMes);
-    
-    
     const siguienteMes = (indiceMes + 1) % 12; 
-    
-    
     const fechaActual = new Date();
     let ano = fechaActual.getFullYear();
-    
-    
     if (primerMes === 'Diciembre') {
       ano -= 0;
     }
-    
-    
     const mes = (siguienteMes + 1).toString().padStart(2, '0');
-    
-    
     return `${ano} ${mes} 04`;
   }
- 
   const fechaExpedicion = obtenerFechaExpedicion();
   const fechaExpedicion2 = convertirFecha(fechaExpedicion);
   const fechaVencimiento2 = obtenerFechaVencimiento(mesesPendientes);
-
-  const PDFContent = () => (
+      const doc = (
+    
 <Document>
   <Page style={{   padding: 20, backgroundColor: '#f7f7f7', }}>
   <View style={{ flexDirection: "row", marginTop:"50px",fontSize: 8,marginBottom:"10px",justifyContent:"space-around",alignItems:"center"}}>
@@ -256,7 +236,7 @@ const Admin: React.FC = () => {
       Ncuenta:
     </Text>
     <Text style={{ width: "60%", padding: 2, textAlign: "center" }} >
-      {data.NCuenta}
+      {data.mes_atrasado}
     </Text>
     <Text style={{ width: "20%", padding: 2 }}></Text>
   </View>
@@ -300,7 +280,7 @@ const Admin: React.FC = () => {
       {data.correo}
     </Text>
     <Text style={{ width: "20%", padding: 2, textAlign: "center", backgroundColor: "#BEBEBE", }} >
-    {fechaVencimiento2}
+    {fechaVencimiento2} 
     </Text>
   </View>
 
@@ -322,7 +302,7 @@ const Admin: React.FC = () => {
       </Text>
     </View>
     <View>
-  {filas}
+  {filas} 
 </View>
 </View>
 
@@ -349,108 +329,27 @@ const Admin: React.FC = () => {
   </Page>
 </Document>
 
+      );
 
-  )
+      const blob = await pdf(doc).toBlob(); 
+      zip.file(`${data.contratante}.pdf`, blob); 
+    }
+
+    
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    saveAs(zipBlob, "facturas.zip");
+
+    setLoading(false);
+  };
+
   return (
-    <div className="fondo" style={{ backgroundImage: `url(${require("./fondo.jpg")})` }} >
-    <div style={{ width: "100%", height: 90, position: "absolute", top: 0,  left: 0,  backgroundColor: "white", borderRadius: "0px", padding: 10, boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",  }} >
-      <img src={require("./logotusmegas.png")} alt="Imagen" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "20px" }} />
-    </div>
-
-      <div  style={{backgroundColor: "rgba(255, 255, 255, 0.5)",borderRadius: "20px",backdropFilter: "blur(5px)",height: "100%",}}>
-
-        <div style={{display: "flex",flexDirection:"column", padding: 20, textAlign: "center",justifyContent: "center", alignItems: "center"}}>
-          <div style={{ display: "flex",flexDirection:"row", alignItems: "center", gap: 20,justifyContent: "center",maxWidth:"720px" }}>
-            <div className="container">
-              <img src={require("./img3.png")} alt="Factura" />
-              <div className="text-container">
-                <h2>Consulte y Pague su Factura</h2>
-                <p>Para realizar la consulta, ingrese el número de la cuenta.</p>
-                <div>
-                  <h4>¿Cuál es el número de la factura?</h4>
-                  <Button type="primary" size="small" style={{ fontSize: "14px", padding: "6px 12px" }}>Ver Guía</Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div  className="text-container" style={{ marginTop:"50px" }}>
-            <h3>Número de cuenta:</h3>
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 20 }}>
-            <Input
-              placeholder="Ingrese número de cuenta"
-              value={numeroCuenta}
-              onChange={(e) => setNumeroCuenta(e.target.value)}
-              style={{ width: 300 }}
-            />
-            <Button type="primary" onClick={fetchData} loading={loading}
-            style={{ fontSize: "14px", padding: "6px 12px" }}>
-              Buscar
-            </Button>
-          </div>
-          <div  className="text-container">
-            <p>Puede realizar el pago de su factura en línea por Bancolombia o imprimirla y pagarla en un punto de servicio.</p>
-          </div>
-       
-
-          {data && (
-            <div className="text-tabla" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%" }}>
-              
-              {/* Contenedor de la tabla centrada */}
-              <div style={{ display: "flex", justifyContent: "center", flexGrow: 1 }}>
-                <table style={{ maxWidth: "700px", borderCollapse: "collapse" }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" ,backgroundColor:"#E5E5E5"}}>N° Cuenta</td>
-                      <td style={{ border: "1px solid #ddd", padding: "4px",backgroundColor:"#E5E5E5" }}>{data.NCuenta}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" }}>Contratante</td>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" }}>{data.contratante}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" ,backgroundColor:"#E5E5E5"}}>Dirección</td>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" ,backgroundColor:"#E5E5E5"}}>{data.direccion}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" }}>Periodo Facturado</td>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" }}>{mesesPendientes.join(", ")}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" ,backgroundColor:"#E5E5E5"}}>Total a Pagar</td>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" ,backgroundColor:"#E5E5E5"}}>{totalFactura.toLocaleString("es-CO")}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" }}>fecha de vencimiento</td>
-                      <td style={{ border: "1px solid #ddd", padding: "4px" }}>{fechaVencimiento2}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Contenedor del botón de descarga */}
-              <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
-            <PDFDownloadLink
-              document={<PDFContent />}
-              fileName={`factura_${numeroCuenta}.pdf`}
-            >
-              {({ loading }) => (
-                <Button type="primary" loading={loading}>
-                  Descargar Factura
-                </Button>
-              )}
-            </PDFDownloadLink>
-             
-          </div>
-            </div>
-          )}
-        </div>
-
-      </div>
+    <div style={{ padding: "20px", textAlign: "center" }}>
+      <h2>Descargar todas las facturas</h2>
+      <Button type="primary" onClick={handleDownloadAll} loading={loading}>
+        Descargar Todas
+      </Button>
     </div>
   );
 };
 
-export default Admin;
-
-
+export default DownloadAllPDFs;

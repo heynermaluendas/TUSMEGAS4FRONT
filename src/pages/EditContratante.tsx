@@ -23,14 +23,14 @@ const ContratantesEdit = () => {
     const [busqueda, setBusqueda] = useState("");
     const [usuariosMikrotik, setUsuariosMikrotik] = useState([]);
     const [visible, setVisible] = useState(false);
-    // const [form] = Form.useForm();
+    
     const columns = useMemo(() => [
        
       {
         title: 'Contratante',
         dataIndex: 'contratante',
         key: 'contratante',
-        sorter: (a, b) => a.contratante.localeCompare(b.contratante), // Ordenar por el nombre
+        sorter: (a, b) => a.contratante.localeCompare(b.contratante), 
         render: text => <span style={{ fontSize: '10px' }}>{text?.toUpperCase()}</span>,
       },
       {
@@ -44,22 +44,18 @@ const ContratantesEdit = () => {
           dataIndex: 'precio_mes_actual',
           key: 'precio_mes_actual',
           render: text => <span style={{ fontSize: '12px' }}>{text}</span>,
-    
         },
-     
         {
           title: 'Plan ',
           dataIndex: 'plan_contratado_mes_actual',
           key: 'plan_contratado_mes_actual',
           render: text => <span style={{ fontSize: '12px' }}>{text}</span>,
-    
         },
         {
           title: 'id',
           dataIndex: 'plan_contratado_mes_atrasado',
           key: 'plan_contratado_mes_atrasado',
           render: text => <span style={{ fontSize: '12px' }}>{text}</span>,
-    
         },
         {
             title: 'Acciones',
@@ -119,10 +115,10 @@ useEffect(() => {
   
   const desbloquearUsuario = async (values) => {
     try {
-      const { user_id, comment } = values;  // Ahora recibe comment del record
+      const { user_id, comment } = values;  
       const data = {
         user_id,
-        comment,  // Enviamos el valor dinámico
+        comment,  
       };
       await axios.post(`${config.BaseUrl}/probardesbloquear_usuario/`, data);
       message.success('Usuario desbloqueado');
@@ -155,7 +151,7 @@ useEffect(() => {
       const planContratadoMesAtrasado = formEdit.getFieldValue('plan_contratado_mes_atrasado');
       const planContratadoMesActual = formEdit.getFieldValue('plan_contratado_mes_actual');
 
-      // Formateamos el valor de 'plan_contratado_mes_actual' solo al guardar
+      
       const formattedValue = planContratadoMesActual.replace(/\s*MB\s*/i, "M");
       const formattedComment = formattedValue + "/" + formattedValue;
 
@@ -164,8 +160,8 @@ useEffect(() => {
         comment: formattedComment
       };
 
-      // Llamamos a la función que enviará la solicitud al servidor
-      // await desbloquearUsuario(values1);
+      
+      
 
     } catch (error) {
       message.error('Error al actualizar el contratante');
@@ -174,11 +170,11 @@ useEffect(() => {
   };
   const handleOkAgregar = async () => {
     try {
-      const values = await formAgregar.validateFields(); // Validar el formulario
+      const values = await formAgregar.validateFields(); 
       await axios.post(`${config.BaseUrl}/agregar_contratante/`, values);
       message.success("Contratante agregado exitosamente");
       setVisible(false);
-      formAgregar.resetFields(); // Limpiar el formulario
+      formAgregar.resetFields(); 
       const response = await axios.get(`${config.BaseUrl}/contratantes/`);
       setContratantes(response.data);
     } catch (error) {

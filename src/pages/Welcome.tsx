@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Table, Spin, Alert, Input } from "antd";
 import axios from "axios";
-import config from "../config"; // ✅ Importación correcta
+import config from "../config"; 
 
 const UsuariosSinId = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [filteredUsuarios, setFilteredUsuarios] = useState([]); // Para la búsqueda
+  const [filteredUsuarios, setFilteredUsuarios] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchText, setSearchText] = useState("");
@@ -20,7 +20,7 @@ const UsuariosSinId = () => {
         const responseContratantes = await axios.get(`${config.BaseUrl}/contratantes/`);
         console.log("Respuesta Contratantes:", responseContratantes.data);
 
-        // Asegurar que sean arrays válidos
+        
         const usuariosData = Array.isArray(responseUsuarios.data.usuarios) 
           ? responseUsuarios.data.usuarios 
           : [];
@@ -32,20 +32,20 @@ const UsuariosSinId = () => {
         console.log("Usuarios MikroTik:", usuariosData);
         console.log("Contratantes:", contratantesData);
 
-        // Extraer los IDs de contratantes en un Set para búsqueda rápida
+        
         const idsContratantes = new Set(
           contratantesData
-            .map((c) => c.plan_contratado_mes_atrasado) // Extraemos los IDs de contratantes
-            .filter(Boolean) // Eliminamos valores vacíos o nulos
+            .map((c) => c.plan_contratado_mes_atrasado) 
+            .filter(Boolean) 
         );
 
         console.log("IDs de Contratantes:", idsContratantes);
 
-        // Filtrar usuarios de MikroTik cuyo ID NO esté en contratantes
+        
         const usuariosSinId = usuariosData.filter((usuario) => !idsContratantes.has(usuario[".id"]));
 
         setUsuarios(usuariosSinId);
-        setFilteredUsuarios(usuariosSinId); // Inicializamos el estado filtrado
+        setFilteredUsuarios(usuariosSinId); 
       } catch (err) {
         console.error("Error al cargar datos:", err);
         setError(`Error al cargar los datos: ${err.message}`);
@@ -57,7 +57,7 @@ const UsuariosSinId = () => {
     fetchData();
   }, []);
 
-  // Función de búsqueda
+  
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchText(value);

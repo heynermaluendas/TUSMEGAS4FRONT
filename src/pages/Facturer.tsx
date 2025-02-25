@@ -16,14 +16,13 @@ const ContratantesTable = () => {
         return user ? user['max-limit'] : 'No encontrado';
       };
     
-    
     const columns = useMemo(() => [
        
         {
             title: 'Contratante',
             dataIndex: 'contratante',
             key: 'contratante',
-            sorter: (a, b) => a.contratante.localeCompare(b.contratante), // Ordenar por el nombre
+            sorter: (a, b) => a.contratante.localeCompare(b.contratante), 
             render: text => <span style={{ fontSize: '10px' }}>{text?.toUpperCase()}</span>,
           },
           {
@@ -107,12 +106,12 @@ const ContratantesTable = () => {
                         <Popconfirm
                             title="¿Deseas desbloquear a este usuario?"
                             onConfirm={() => {
-                                // Convertimos "30 MB" -> "30M/30M"
+                                
                                 const formattedComment = record.plan_contratado_mes_actual.replace(/\s*MB\s*/i, "M") + "/" + record.plan_contratado_mes_actual.replace(/\s*MB\s*/i, "M");
                                 
                                 const values = { 
                                 user_id: record.plan_contratado_mes_atrasado, 
-                                comment: formattedComment  // Pasamos el valor convertido
+                                comment: formattedComment  
                                 };
                                 
                                 console.log('Intentando desbloquear:', values);
@@ -146,13 +145,13 @@ const ContratantesTable = () => {
       };
       
       useEffect(() => {
-        fetchUsuariosMikrotik();  // Cargar usuarios Mikrotik al inicio
+        fetchUsuariosMikrotik();  
       }, []);
 
 useEffect(() => {
     axios.get(`${config.BaseUrl}/mikrotik/usuarios/`)
       .then(response => {
-        // Procesa los datos
+        
         const usuarios = response.data.usuarios.reduce((acc, currentArray) => {
           return acc.concat(currentArray);
         }, []);
@@ -193,10 +192,10 @@ useEffect(() => {
 
  const desbloquearUsuario = async (values) => {
   try {
-    const { user_id, comment } = values;  // Ahora recibe comment del record
+    const { user_id, comment } = values;  
     const data = {
       user_id,
-      comment,  // Enviamos el valor dinámico
+      comment,  
     };
     await axios.post(`${config.BaseUrl}/desbloquear_usuario/`, data);
     message.success('Usuario desbloqueado');
@@ -236,7 +235,7 @@ useEffect(() => {
       });
       console.log('Mes actualizado a:', nextMonth);
       const contratantesResponse = await axios.get(`${config.BaseUrl}/contratantes/`);
-      setContratantes(contratantesResponse.data); // Actualizar el estado de los contratantes
+      setContratantes(contratantesResponse.data); 
       return response.data;
     } catch (error) {
       console.error('Error al modificar el mes:', error);
