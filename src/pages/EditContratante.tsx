@@ -3,6 +3,8 @@ import { Table, Button, Modal, Input, Form, message,Popconfirm,Select  } from 'a
 import axios from 'axios';
 import config from '../config';
 import UsuariosSinId from "./Welcome";
+import debounce from "lodash.debounce";
+
 
 const { Option } = Select;
 
@@ -195,11 +197,23 @@ useEffect(() => {
     }
   };
 
-  const contratantesFiltrados = contratantes.filter(
-    (contratante) =>
-      contratante.contratante.toLowerCase().includes(busqueda.toLowerCase()) ||
-      contratante.nit_o_cc.includes(busqueda)
+  const handleSearch = useMemo(
+    () =>
+      debounce((value) => {
+        setBusqueda(value);
+      }, 300),
+    []
   );
+
+  const contratantesFiltrados = useMemo(() => {
+    return contratantes.filter(
+      (contratante) =>
+        contratante.contratante.toLowerCase().includes(busqueda.toLowerCase()) ||
+        contratante.nit_o_cc.includes(busqueda)
+    );
+  }, [busqueda, contratantes]); // Solo recalcula si cambia la búsqueda o los datos
+
+  
 
   return ( 
     <div>
@@ -210,7 +224,7 @@ useEffect(() => {
             <div style={{ marginRight: '2px', textAlign: 'left' ,width:"60%"}}>
             <Search
               placeholder="Buscar por nombre o NIT/CC"
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               style={{ marginBottom: "20px", width: "100%" }}
             />
             </div>

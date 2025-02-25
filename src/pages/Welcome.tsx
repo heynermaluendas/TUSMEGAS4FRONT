@@ -1,51 +1,33 @@
 import { useState, useEffect } from "react";
-import { Table, Spin, Alert, Input } from "antd";
+import { Table, Spin, Alert, Input, Button } from "antd";
 import axios from "axios";
 import config from "../config"; 
 
+const palabrasFiltradas = ["VACIO", "RESPALDO","REPALDO","POWER", "QUEUE", "ANTENA","PLAN","LAP","17.",]; // Palabras a ocultar por defecto
+
 const UsuariosSinId = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [filteredUsuarios, setFilteredUsuarios] = useState([]); 
+  const [filteredUsuarios, setFilteredUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [filtroActivo, setFiltroActivo] = useState(true); // Estado para activar/desactivar el filtro
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("Obteniendo datos de MikroTik...");
         const responseUsuarios = await axios.get(`${config.BaseUrl}/mikrotik/usuarios/`);
-        console.log("Respuesta MikroTik:", responseUsuarios.data);
-
         const responseContratantes = await axios.get(`${config.BaseUrl}/contratantes/`);
-        console.log("Respuesta Contratantes:", responseContratantes.data);
 
-        
-        const usuariosData = Array.isArray(responseUsuarios.data.usuarios) 
-          ? responseUsuarios.data.usuarios 
-          : [];
+        const usuariosData = Array.isArray(responseUsuarios.data.usuarios) ? responseUsuarios.data.usuarios : [];
+        const contratantesData = Array.isArray(responseContratantes.data) ? responseContratantes.data : responseContratantes.data.data || [];
 
-        const contratantesData = Array.isArray(responseContratantes.data) 
-          ? responseContratantes.data 
-          : responseContratantes.data.data || [];
+        const idsContratantes = new Set(contratantesData.map((c) => c.plan_contratado_mes_atrasado).filter(Boolean));
 
-        console.log("Usuarios MikroTik:", usuariosData);
-        console.log("Contratantes:", contratantesData);
-
-        
-        const idsContratantes = new Set(
-          contratantesData
-            .map((c) => c.plan_contratado_mes_atrasado) 
-            .filter(Boolean) 
-        );
-
-        console.log("IDs de Contratantes:", idsContratantes);
-
-        
         const usuariosSinId = usuariosData.filter((usuario) => !idsContratantes.has(usuario[".id"]));
 
         setUsuarios(usuariosSinId);
-        setFilteredUsuarios(usuariosSinId); 
+        aplicarFiltro(usuariosSinId, searchText, filtroActivo); // Aplicar filtro al cargar
       } catch (err) {
         console.error("Error al cargar datos:", err);
         setError(`Error al cargar los datos: ${err.message}`);
@@ -57,16 +39,29 @@ const UsuariosSinId = () => {
     fetchData();
   }, []);
 
-  
+  const aplicarFiltro = (data, busqueda, filtrar) => {
+    let resultado = data.filter((usuario) =>
+      usuario[".id"].toLowerCase().includes(busqueda.toLowerCase()) || usuario.name.toLowerCase().includes(busqueda.toLowerCase())
+    );
+
+    if (filtrar) {
+      resultado = resultado.filter((usuario) =>
+        !palabrasFiltradas.some((palabra) => usuario.name.toUpperCase().includes(palabra) || usuario[".id"].toUpperCase().includes(palabra))
+      );
+    }
+
+    setFilteredUsuarios(resultado);
+  };
+
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchText(value);
-    const filtered = usuarios.filter(
-      (usuario) =>
-        usuario[".id"].toLowerCase().includes(value) || 
-        usuario.name.toLowerCase().includes(value)
-    );
-    setFilteredUsuarios(filtered);
+    aplicarFiltro(usuarios, value, filtroActivo);
+  };
+
+  const toggleFiltro = () => {
+    setFiltroActivo(!filtroActivo);
+    aplicarFiltro(usuarios, searchText, !filtroActivo);
   };
 
   const columns = [
@@ -76,13 +71,16 @@ const UsuariosSinId = () => {
 
   return (
     <div>
-      
       <Input
         placeholder="Buscar por ID o Nombre..."
         value={searchText}
         onChange={handleSearch}
         style={{ marginBottom: 10, minWidth: "50%" }}
       />
+
+      <Button onClick={toggleFiltro} style={{ marginBottom: 10 }}>
+        {filtroActivo ? "Desactivar Filtro" : "Activar Filtro"}
+      </Button>
 
       {error && <Alert message={error} type="error" />}
       {loading ? (

@@ -51,6 +51,7 @@
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "jszip": "^3.10.1",
+    "lodash.debounce": "^4.0.8",
     "pdfmake": "^0.2.18",
     "querystring": "^0.2.1",
     "react": "^18.3.1",
