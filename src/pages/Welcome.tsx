@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Table, Spin, Alert, Input, Button } from "antd";
+import { Table, Spin, Alert, Input, Button,notification ,message } from "antd";
 import axios from "axios";
 import config from "../config"; 
 
@@ -63,11 +63,37 @@ const UsuariosSinId = () => {
     setFiltroActivo(!filtroActivo);
     aplicarFiltro(usuarios, searchText, !filtroActivo);
   };
+  const copyToClipboard = (id) => {
+    navigator.clipboard.writeText(id).then(() => {
+      message.success("Copiado al portapapeles");
+    }).catch(() => {
+      message.error("Error al copiar");
+    });
+  };
+  
 
   const columns = [
-    { title: "ID MikroTik", dataIndex: ".id", key: ".id" },
+    {
+      title: "ID MikroTik",
+      dataIndex: ".id",
+      key: ".id",
+      render: (id) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span>{id}</span>
+          <Button
+            size="small"
+            style={{ marginLeft: "30%"  }}
+            onClick={() => copyToClipboard(id)}
+            type="primary"
+          >
+            copiar
+          </Button>
+        </div>
+      ),
+    },
     { title: "Usuario", dataIndex: "name", key: "name" },
   ];
+  
 
   return (
     <div>

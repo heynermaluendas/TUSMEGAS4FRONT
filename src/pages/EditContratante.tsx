@@ -25,9 +25,92 @@ const ContratantesEdit = () => {
     const [busqueda, setBusqueda] = useState("");
     const [usuariosMikrotik, setUsuariosMikrotik] = useState([]);
     const [visible, setVisible] = useState(false);
+
+
+    const getMaxLimit = (planId) => {
+      const user = usuariosMikrotik.find(user => user[".id"] === planId);
+      return user ? user['max-limit'] : 'No encontrado';
+    };
+    const calcularMesesVencidos = (mesAtrasado: string) => {
+      const meses = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+      ];
+    
+      
+      const mesNormalizado = mesAtrasado.toLowerCase(); 
+      const mesActual = new Date().toLocaleString('es-ES', { month: 'long' }).toLowerCase(); 
+    
+      
+      if (!mesAtrasado || typeof mesAtrasado !== 'string') {
+        return { error: "Mes inválido", cantidad: 0 };
+      }
+    
+      
+      const indiceMesAtrasado = meses.indexOf(mesNormalizado);
+      if (indiceMesAtrasado === -1) {
+        return { error: "Mes no válido", cantidad: 0 };
+      }
+    
+      
+      const mesesAntes = [
+        meses[(meses.indexOf(mesActual) + 11) % 12], 
+        meses[(meses.indexOf(mesActual) + 10) % 12], 
+        meses[(meses.indexOf(mesActual) + 9) % 12],  
+      ];
+    
+      const mesesPosteriores = [
+        meses[meses.indexOf(mesActual)], 
+        meses[(meses.indexOf(mesActual) + 1) % 12], 
+        meses[(meses.indexOf(mesActual) + 2) % 12], 
+      ];
+    
+      
+      if (mesesAntes.includes(mesNormalizado)) {
+        let mesesVencidos = [];
+        
+        if (mesAtrasado.toLowerCase() === "enero") {
+          mesesVencidos = ["enero", "febrero"];
+        } else if (mesAtrasado.toLowerCase() === "diciembre") {
+          mesesVencidos = ["diciembre", "enero", "febrero"];
+        } else {
+          const indiceAtrasado = meses.indexOf(mesAtrasado.toLowerCase());
+          const diferencia = meses.indexOf(mesActual) - indiceAtrasado;
+          for (let i = 0; i < diferencia; i++) {
+            const mesVencido = meses[(indiceAtrasado + i) % 12];
+            mesesVencidos.push(mesVencido.charAt(0).toUpperCase() + mesVencido.slice(1));
+          }
+        }
+    
+        return {
+          cantidad: mesesVencidos.length,
+          meses: mesesVencidos,
+          mensaje: mesesVencidos.length === 1
+            ? "1 mes vencido"
+            : `${mesesVencidos.length} meses vencidos`
+        };
+      }
+    
+      
+      if (mesesPosteriores.includes(mesNormalizado)) {
+        return {
+          cantidad: 1,
+          meses: [mesAtrasado.charAt(0).toUpperCase() + mesAtrasado.slice(1)],
+          mensaje: `${mesAtrasado.charAt(0).toUpperCase() + mesAtrasado.slice(1)} está adelantado`
+        };
+      }
+    
+      
+      return { error: "Mes fuera de rango", cantidad: 0 };
+    };
     
     const columns = useMemo(() => [
-       
+      {
+        title: "*",
+        render: (_, __, index) => (
+          <span style={{ fontSize: '12px',  }}>{index + 1}</span>
+        ), 
+      },
       {
         title: 'Contratante',
         dataIndex: 'contratante',
@@ -36,10 +119,15 @@ const ContratantesEdit = () => {
         render: text => <span style={{ fontSize: '10px' }}>{text?.toUpperCase()}</span>,
       },
       {
-        title: 'Mes debe',
-        dataIndex: 'mes_actual',
-        key: 'mes_actual',
-        render: text => <span style={{ fontSize: '10px' }}>{text?.toUpperCase()}</span>,
+        title: "Mes debe",
+        dataIndex: "mes_actual", // Nombre de la propiedad en tu API
+        key: "mes_actual",
+        render: (text) => {
+          const resultado = calcularMesesVencidos(text);
+          return <span style={{ fontSize: "10px" }}>{resultado.meses.join(", ")}</span>;
+
+        },
+        
       },
         {
           title: 'Precio',
@@ -59,22 +147,42 @@ const ContratantesEdit = () => {
           key: 'plan_contratado_mes_atrasado',
           render: text => <span style={{ fontSize: '12px' }}>{text}</span>,
         },
+         {
+            title: 'mikrotick',
+            key: 'service_control',
+            render: (_, record) => {
+                const maxLimit = getMaxLimit(record.plan_contratado_mes_atrasado);
+                const maxLimitValue = maxLimit 
+            ? `${parseInt(maxLimit.split('/')[0], 10) / 1_000_000} Mb`
+            : 'No encontrado';
+        
+              return (
+                <>
+              <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+              <div style={{ marginRight: '2px', textAlign: 'left' }}>
+                <span style={{ fontSize: "12px", color: parseFloat(maxLimitValue) === 0.001 ? 'red' : 'inherit' }}>
+                  {maxLimitValue}
+                </span>
+              </div>
+            </div>
+
+                </>
+              );
+            },
+          },
         {
             title: 'Acciones',
             key: 'actions',
             render: (_, record) => (
               <>
-                <Popconfirm
-                  title="¿Estás seguro de que quieres editar este contratante?"
-                  onConfirm={() => showModal(record)}
-                  okText="Sí"
-                  cancelText="No"
+               <Button
+                  type="link"
+                  style={{ marginRight: 0, fontSize: 12 }}
+                  onClick={() => showModal(record)}  // Acción que se ejecuta al hacer clic
                 >
-                  <Button type="link" style={{ marginRight: 0, fontSize: 12 }}>
-                    Editar
-                  </Button>
-                </Popconfirm>
-                
+                  Editar
+                </Button>
+
                 <Popconfirm
                   title="¿Estás seguro de que quieres eliminar este contratante?"
                   onConfirm={() => eliminarContratante(record.nit_o_cc)}
@@ -265,7 +373,7 @@ useEffect(() => {
           <Form.Item label="N Cuenta" name="mes_atrasado">
             <Input />
           </Form.Item>
-          <Form.Item label="Mes Actual" name="mes_actual">
+          <Form.Item label="Mes debe" name="mes_actual">
             <Select placeholder="Seleccione un mes">
               {mesesDelAno.map((mes) => (
                 <Option key={mes} value={mes}>{mes}</Option>
