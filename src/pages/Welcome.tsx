@@ -123,6 +123,7 @@ const UsuariosSinId = () => {
 
   return (
     <div>
+      <div style={{display:'flex' , flexDirection:'row'}}>
       <Input
         placeholder="Buscar por ID o Nombre..."
         value={searchText}
@@ -130,9 +131,11 @@ const UsuariosSinId = () => {
         style={{ marginBottom: 10, minWidth: '60%' }}
       />
 
-      <Button onClick={toggleFiltro} style={{ marginBottom: 10 }}>
+      <Button onClick={toggleFiltro} style={{ marginBottom: 10,minWidth: '40%' }}>
         {filtroActivo ? 'Desactivar Filtro' : 'Activar Filtro'}
       </Button>
+      </div>
+    
 
       {error && <Alert message={error} type="error" />}
       {loading ? (

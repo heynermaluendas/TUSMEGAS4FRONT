@@ -5,7 +5,7 @@ import config from '../config';
 import UsuariosSinId from "./Welcome";
 import debounce from "lodash.debounce";
 
-
+import "./index.css";
 const { Option } = Select;
 
 const mesesDelAno = [
